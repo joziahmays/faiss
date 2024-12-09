@@ -245,31 +245,33 @@ add_library(faiss ${FAISS_SRC})
 add_library(faiss_avx2 ${FAISS_SRC})
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx2" AND NOT FAISS_OPT_LEVEL STREQUAL "avx512")
   set_target_properties(faiss_avx2 PROPERTIES EXCLUDE_FROM_ALL TRUE)
-endif()
-if(NOT WIN32)
-  target_compile_options(faiss_avx2 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c -mpopcnt>)
 else()
-  # MSVC enables FMA with /arch:AVX2; no separate flags for F16C, POPCNT
-  # Ref. FMA (under /arch:AVX2): https://docs.microsoft.com/en-us/cpp/build/reference/arch-x64
-  # Ref. F16C (2nd paragraph): https://walbourn.github.io/directxmath-avx2/
-  # Ref. POPCNT: https://docs.microsoft.com/en-us/cpp/intrinsics/popcnt16-popcnt-popcnt64
-  target_compile_options(faiss_avx2 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX2>)
-  # we need bigobj for the swig wrapper
-  add_compile_options(/bigobj)
+  if(NOT WIN32)
+    target_compile_options(faiss_avx2 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c -mpopcnt>)
+  else()
+    # MSVC enables FMA with /arch:AVX2; no separate flags for F16C, POPCNT
+    # Ref. FMA (under /arch:AVX2): https://docs.microsoft.com/en-us/cpp/build/reference/arch-x64
+    # Ref. F16C (2nd paragraph): https://walbourn.github.io/directxmath-avx2/
+    # Ref. POPCNT: https://docs.microsoft.com/en-us/cpp/intrinsics/popcnt16-popcnt-popcnt64
+    target_compile_options(faiss_avx2 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX2>)
+    # we need bigobj for the swig wrapper
+    add_compile_options(/bigobj)
+  endif()
 endif()
 
 add_library(faiss_avx512 ${FAISS_SRC})
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx512")
   set_target_properties(faiss_avx512 PROPERTIES EXCLUDE_FROM_ALL TRUE)
-endif()
-if(NOT WIN32)
-  # All modern CPUs support F, CD, VL, DQ, BW extensions.
-  # Ref: https://en.wikipedia.org/wiki/AVX512
-  target_compile_options(faiss_avx512 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mpopcnt>)
 else()
-  target_compile_options(faiss_avx512 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX512>)
-  # we need bigobj for the swig wrapper
-  add_compile_options(/bigobj)
+  if(NOT WIN32)
+    # All modern CPUs support F, CD, VL, DQ, BW extensions.
+    # Ref: https://en.wikipedia.org/wiki/AVX512
+    target_compile_options(faiss_avx512 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mpopcnt>)
+  else()
+    target_compile_options(faiss_avx512 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX512>)
+    # we need bigobj for the swig wrapper
+    add_compile_options(/bigobj)
+  endif()
 endif()
 
 add_library(faiss_sve ${FAISS_SRC})
